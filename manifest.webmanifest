@@ -1,0 +1,10 @@
+{
+  "name":"BDS II Batch B Attendance",
+  "short_name":"BDS Attendance",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#f4f6fa",
+  "theme_color":"#111827",
+  "description":"BDS II Batch B attendance tracker",
+  "icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]
+}

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="description" content="BDS II Batch B attendance tracker">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<title>BDS II · Batch B Attendance</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+<section id="authView" class="auth-wrap">
+  <div class="auth-card">
+    <div class="brand">DPU</div>
+    <h1>BDS II · Batch B</h1>
+    <p class="muted">Smart attendance tracker · 2026–27</p>
+    <div class="tabs">
+      <button class="tab active" data-auth="login">Login</button>
+      <button class="tab" data-auth="signup">Create account</button>
+    </div>
+    <form id="authForm">
+      <input id="email" type="email" placeholder="Email" required autocomplete="email">
+      <input id="password" type="password" minlength="6" placeholder="Password" required autocomplete="current-password">
+      <button id="authSubmit" class="primary full">Login</button>
+    </form>
+    <p id="authMsg" class="small muted"></p>
+  </div>
+</section>
+
+<section id="appView" class="hidden">
+<header class="topbar">
+  <div>
+    <div class="brand small-brand">DPU · BDS II</div>
+    <h1>Batch B Attendance</h1>
+    <p class="muted">Dr. D. Y. Patil Dental College & Hospital, Pimpri</p>
+  </div>
+  <div class="top-actions">
+    <button id="installBtn" class="secondary hidden">Install app</button>
+    <button id="todayBtn" class="secondary">Today</button>
+    <button id="logoutBtn" class="ghost">Log out</button>
+  </div>
+</header>
+
+<nav class="nav">
+  <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+  <button class="nav-btn" data-page="mark">Mark</button>
+  <button class="nav-btn" data-page="calendar">Calendar</button>
+  <button class="nav-btn" data-page="sessionals">Sessionals</button>
+  <button class="nav-btn" data-page="calculator">Calculators</button>
+  <button class="nav-btn" data-page="history">History</button>
+  <button class="nav-btn" data-page="export">Export</button>
+  <button class="nav-btn" data-page="settings">Settings</button>
+</nav>
+
+<main class="container">
+
+<section id="page-dashboard" class="page">
+  <div class="page-head">
+    <div><h2>Dashboard</h2><p class="muted">Primary overall figure = equal-weight average of each subject's attendance. A class-hour weighted figure is also shown.</p></div>
+    <span class="pill">Target 86%</span>
+  </div>
+  <div id="todayStrip"></div>
+  <div id="overallCard"></div>
+  <div class="stats-row" id="quickStats"></div>
+  <div class="section-title"><h3>Subject-wise attendance</h3><div class="filters">
+    <select id="typeFilter"><option value="">All types</option><option>Theory</option><option>Practical</option><option>Interactive</option></select>
+  </div></div>
+  <div id="subjectGrid" class="subject-grid"></div>
+  <div class="section-title"><h3>Attendance trend</h3></div>
+  <div class="chart-card"><canvas id="trendChart"></canvas></div>
+</section>
+
+<section id="page-mark" class="page hidden">
+  <div class="page-head">
+    <div><h2>Mark attendance</h2><p class="muted">Every timetable block is one checkbox. The percentage uses the block's scheduled duration as its weight, so a 2-hour practical counts twice a 1-hour lecture.</p></div>
+    <input id="attendanceDate" type="date">
+  </div>
+  <div id="dateBanner" class="date-banner"></div>
+  <div class="bulk-actions">
+    <button id="allPresent" class="secondary">Mark all present</button>
+    <button id="allAbsent" class="danger">Mark all absent</button>
+    <button id="clearDay" class="ghost">Clear day</button>
+  </div>
+  <div id="dailySchedule"></div>
+</section>
+
+<section id="page-calendar" class="page hidden">
+  <div class="page-head">
+    <div><h2>Attendance calendar</h2><p class="muted">Tap a date to mark or edit attendance.</p></div>
+    <div class="month-controls"><button id="prevMonth" class="secondary">‹</button><input id="calendarMonth" type="month"><button id="nextMonth" class="secondary">›</button></div>
+  </div>
+  <div id="calendarLegend" class="legend"></div>
+  <div id="monthCalendar" class="month-calendar"></div>
+</section>
+
+<section id="page-sessionals" class="page hidden">
+  <div class="page-head"><div><h2>Sessional-wise attendance</h2><p class="muted">Each interval is calculated separately against the 86% target.</p></div></div>
+  <div id="sessionCards" class="session-grid"></div>
+</section>
+
+<section id="page-calculator" class="page hidden">
+  <div class="page-head"><div><h2>Attendance calculators</h2><p class="muted">Use these before deciding whether you can miss a class.</p></div></div>
+  <div class="calculator-grid">
+    <div class="panel">
+      <h3>How many classes can I miss?</h3>
+      <label>Subject<select id="calcSubject"></select></label>
+      <div id="bunkResult" class="calc-result"></div>
+    </div>
+    <div class="panel">
+      <h3>How many classes must I attend?</h3>
+      <label>Subject<select id="mustSubject"></select></label>
+      <label>Upcoming classes to consider<input id="futureClasses" type="number" min="0" value="10"></label>
+      <div id="mustResult" class="calc-result"></div>
+    </div>
+    <div class="panel full-panel">
+      <h3>Projected attendance to final exams</h3>
+      <p class="small muted">Projection assumes every remaining scheduled class is attended. It includes only timetable blocks after today and before the final-exam period.</p>
+      <div id="projectionTable" class="table-wrap"></div>
+    </div>
+  </div>
+</section>
+
+<section id="page-history" class="page hidden">
+  <div class="page-head"><div><h2>History</h2><p class="muted">Search and correct saved attendance.</p></div><div class="filters"><select id="historySubject"></select><select id="historyStatus"><option value="">All statuses</option><option value="present">Present</option><option value="absent">Absent</option></select></div></div>
+  <div id="historyTable" class="table-wrap"></div>
+</section>
+
+<section id="page-export" class="page hidden">
+  <div class="page-head"><div><h2>Export & report</h2><p class="muted">Download a copy of your attendance whenever you want.</p></div></div>
+  <div class="export-grid">
+    <div class="panel"><h3>Excel / CSV</h3><p class="small muted">Includes every saved attendance entry with date, time, subject, type and status.</p><button id="exportXlsx" class="primary">Download Excel</button><button id="exportCsv" class="secondary">Download CSV</button></div>
+    <div class="panel"><h3>PDF report</h3><p class="small muted">Generates a printable summary of overall, subject-wise and sessional attendance.</p><button id="exportPdf" class="primary">Generate PDF report</button></div>
+    <div class="panel full-panel"><h3>Backup / restore</h3><p class="small muted">JSON backup is useful before changing settings or moving to another Supabase project.</p><button id="exportJson" class="secondary">Download JSON backup</button><label class="file-label">Restore JSON backup<input id="importJson" type="file" accept="application/json"></label></div>
+  </div>
+</section>
+
+<section id="page-settings" class="page hidden">
+  <div class="page-head"><div><h2>Settings</h2><p class="muted">Timetable, sessional dates, holidays, reminders and display settings.</p></div></div>
+  <div class="settings-grid">
+    <div class="panel">
+      <h3>86% & calculation</h3>
+      <label>Attendance target (%)<input id="targetInput" type="number" min="50" max="100" step="0.1"></label>
+      <label>Overall calculation
+        <select id="overallMode"><option value="subject">Equal-weight subject average</option><option value="hours">Class-hour weighted</option></select>
+      </label>
+      <p class="small muted">The app stores attendance by timetable block. Duration is used as the weight.</p>
+      <button id="saveGeneral" class="primary">Save calculation settings</button>
+    </div>
+    <div class="panel">
+      <h3>Daily reminder</h3>
+      <label class="switch"><input id="reminderEnabled" type="checkbox"> Enable reminder</label>
+      <label>Reminder time<input id="reminderTime" type="time" value="18:00"></label>
+      <button id="enableNotifications" class="secondary">Allow browser notifications</button>
+      <p class="small muted">Browser notifications are most reliable while the app is installed/open. A static GitHub Pages site cannot guarantee a background notification when the browser is fully closed.</p>
+    </div>
+    <div class="panel full-panel">
+      <h3>Sessional boundaries</h3>
+      <div id="sessionSettings"></div>
+      <button id="saveSessions" class="primary">Save sessional dates</button>
+    </div>
+    <div class="panel">
+      <h3>No-class dates</h3>
+      <div class="inline-form"><input id="exceptionDate" type="date"><input id="exceptionLabel" placeholder="Reason"><button id="addException" class="secondary">Add</button></div>
+      <div id="exceptionList"></div>
+    </div>
+    <div class="panel">
+      <h3>Appearance</h3>
+      <label class="switch"><input id="darkMode" type="checkbox"> Dark mode</label>
+      <button id="resetDemo" class="danger">Clear my attendance data</button>
+      <p class="small muted">This permanently deletes your attendance rows from Supabase for this account.</p>
+    </div>
+    <div class="panel full-panel">
+      <h3>Complete Batch B timetable</h3>
+      <div id="timetableTable" class="table-wrap"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
